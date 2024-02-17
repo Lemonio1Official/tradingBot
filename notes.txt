@@ -1,0 +1,13 @@
+https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=ETHUSDT&period=30m
+# Long/Short Ratio
+
+client.Order return {
+'orderId': 8389765651686063170, 'symbol': 'ETHUSDT', 'status': 'NEW', 'clientOrderId': 'AjiVcwiDrW0T2AY6THAEQH', 'price': '2662.79',
+'avgPrice': '0.00', 'origQty': '0.043', 'executedQty': '0.000', 'cumQty': '0.000', 'cumQuote': '0.00000', 'timeInForce': 'GTC',
+'type': 'LIMIT', 'reduceOnly': False, 'closePosition': False, 'side': 'BUY', 'positionSide': 'BOTH', 'stopPrice': '0.00',
+'workingType': 'CONTRACT_PRICE', 'priceProtect': False, 'origType': 'LIMIT', 'priceMatch': 'NONE', 'selfTradePreventionMode': 'NONE',
+'goodTillDate': 0, 'updateTime': 1707815631121
+}
+
+need / current = percent
+need = current * percent
