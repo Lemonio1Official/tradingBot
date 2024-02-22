@@ -10,7 +10,7 @@ class Config:
     LOGARITHMIC = True # bool ЛОГАРИФМІЧНИЙ РОЗПОДІЛ ЦІН вкл/викл
     LOGARITHMIC_VALUE = 1.05 # float ЛОГАРИФМІЧНИЙ РОЗПОДІЛ ЦІН
     FILTERS = [
-        {'filter': 'RSI', 'interval': '1m', 'value': 40+30},
-        {'filter': 'RSI', 'interval': '5m', 'value': 45+30},
-        {'filter': 'RSI', 'interval': '15m', 'value': 50+30},
+        {'filter': 'RSI', 'interval': '1m', 'value': 40},
+        {'filter': 'RSI', 'interval': '5m', 'value': 45},
+        {'filter': 'RSI', 'interval': '15m', 'value': 50},
     ]

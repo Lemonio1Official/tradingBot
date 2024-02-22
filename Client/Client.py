@@ -46,7 +46,7 @@ class Client:
         params['signature'] = self.__GenerateSignature(params)
         headers = {'X-MBX-APIKEY': self.API_KEY}
         response = requests.get(url, headers=headers, params=params)
-        print(response.text)
+
         if response.status_code != 200:
             raise ValueError("Invalid API_KEY or SECRET_KEY")
 
