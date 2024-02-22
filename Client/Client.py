@@ -1,9 +1,10 @@
 import hashlib
 import hmac
-import requests
+from .proxy import requests
 from time import time
-from typing import Dict, Any, Literal
+from typing import Dict, Any, Literal, List
 from .Types import params, OrderParams
+from Client.Calc import avgPrice, Buying
 
 class Client:
     BASE_URL = "https://fapi.binance.com"
@@ -45,7 +46,7 @@ class Client:
         params['signature'] = self.__GenerateSignature(params)
         headers = {'X-MBX-APIKEY': self.API_KEY}
         response = requests.get(url, headers=headers, params=params)
-
+        print(response.text)
         if response.status_code != 200:
             raise ValueError("Invalid API_KEY or SECRET_KEY")
 
@@ -60,7 +61,6 @@ class Client:
 
         data = response.json()
         return float(data['price'])
-
     @staticmethod
     def GetSymbolInfo(symbol: str):
         url = 'https://fapi.binance.com/fapi/v1/exchangeInfo'
@@ -71,6 +71,14 @@ class Client:
                 if i['symbol'] == symbol:
                     return i
         return None
+    @staticmethod
+    def AvgPrice(orders: List[Any]):
+        return avgPrice([Buying(float(i['price']), float(i['price']) * float(i['origQty'])) for i in orders])
+    @staticmethod
+    def GetTotalAmount(orders: List[Any], isCash: bool = False):
+        amount = sum(float(i['origQty']) for i in orders)
+        if isCash: amount *= Client.AvgPrice(orders)
+        return amount
 
     # PRIVATE
     def __Request(self, method: Literal["GET", "POST", "DELETE"], endpoint: str, params: params = {}) -> requests.Response:

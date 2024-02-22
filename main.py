@@ -10,22 +10,10 @@ from time import sleep
 
 client = Client(API_KEY, API_SECRET)
 
-def CancelOrders(orders: List[Any]):
-    for i in orders:
-        client.Order(OrderParams(Config.TRADING_PAIR, orderId=i['orderId']), 'cancel')
-
-def TakeProfitAll(orders: List[Any], price: float):
-    side = 'SELL' if Config.SIDE == 'BUY' else 'BUY'
-    TP_orders = []
-    for i in orders:
-        order = client.Order(OrderParams(Config.TRADING_PAIR, side, 'TAKE_PROFIT', i['origQty'], price, price, orderId=i['orderId']))
-        TP_orders.append(order)
-
-    return TP_orders
-
-def notFilled(order):
-    info = client.Order(OrderParams(Config.TRADING_PAIR ,orderId=order['orderId']), 'info')
-    return info['status'] != 'FILLED'
+def CancelOrders(orders: List[Any]): pass
+def TakeProfitAll(orders: List[Any], price: float): pass
+def NotFilled(order): pass
+def showOrdersGrid(): pass
 
 def main():
     client.Check()
@@ -49,10 +37,10 @@ def main():
     nextAmount = getInitialPurchaseAmount(Config.DEPOSIT * Config.LEVERAGE, Config.ORDERS_GRID, Config.MARTINGALE)
 
     while True:
-        TP_orders = list(filter(notFilled, TP_orders))
+        TP_orders = list(filter(NotFilled, TP_orders))
 
         if len(purchases) and not len(TP_orders):
-            amount = sum(float(i['origQty']) for i in purchases)
+            amount = Client.GetTotalAmount(purchases, True)
             Telegram.ProfitMessage(currentOrder, amount)
 
             currentOrder = 0
@@ -69,8 +57,8 @@ def main():
             order = client.Order(OrderParams(Config.TRADING_PAIR ,orderId=purchases[-1]['orderId']), 'info')
             if order['status'] == 'FILLED':
                     purchases[-1] = order
-                    amount = sum(float(i['origQty']) for i in purchases)
-                    averagePrice = avgPrice([Buying(float(i['price']), float(i['price']) * float(i['origQty'])) for i in purchases])
+                    amount = Client.GetTotalAmount(purchases)
+                    averagePrice = Client.AvgPrice(purchases)
                     Telegram.DealDetails(currentOrder, amount, averagePrice)
 
         Checking = 0
@@ -105,13 +93,14 @@ def main():
             if Config.LOGARITHMIC:
                 price_change = price * getInitialPriceChange(Config.LOGARITHMIC_VALUE, Config.ORDERS_GRID, Config.PRICE_OVERLAP)
 
+            showOrdersGrid(overlap, nextPrice, nextAmount, price_change, symbolInfo)
             Telegram.SendMessage(f"🔔 {Config.TRADING_PAIR}\n\nThe bot entered the trade")
 
         quantity = round(nextAmount / price, symbolInfo['quantityPrecision'])
         purchases.append(client.Order(OrderParams(Config.TRADING_PAIR, Config.SIDE, 'LIMIT', quantity, round(price, symbolInfo['pricePrecision']))))
         Telegram.SendMessage(f"🎣 {Config.TRADING_PAIR}\n\nOrder {currentOrder+1}/{Config.ORDERS_GRID} was placed")
 
-        averagePrice = avgPrice([Buying(float(i['price']), float(i['price']) * float(i['origQty'])) for i in purchases])
+        averagePrice = Client.AvgPrice(purchases)
         TP_price = averagePrice + averagePrice * Config.PROFIT * (1 if Config.SIDE == 'BUY' else -1)
 
         if len(TP_orders):
@@ -131,6 +120,46 @@ def main():
         nextAmount += nextAmount * Config.MARTINGALE
 
         sleep(3)
+
+def CancelOrders(orders: List[Any]):
+    for i in orders:
+        client.Order(OrderParams(Config.TRADING_PAIR, orderId=i['orderId']), 'cancel')
+
+def TakeProfitAll(orders: List[Any], price: float):
+    side = 'SELL' if Config.SIDE == 'BUY' else 'BUY'
+    TP_orders = []
+    for i in orders:
+        order = client.Order(OrderParams(Config.TRADING_PAIR, side, 'TAKE_PROFIT', i['origQty'], price, price, orderId=i['orderId']))
+        TP_orders.append(order)
+
+    return TP_orders
+
+def NotFilled(order):
+    info = client.Order(OrderParams(Config.TRADING_PAIR, orderId=order['orderId']), 'info')
+    return info['status'] != 'FILLED'
+
+def showOrdersGrid(overlap: float, nextPrice: float, nextAmount: float, price_change: float, symbolInfo: Any):
+    orders = []
+
+    while len(orders) < Config.ORDERS_GRID:
+        quantity = round(nextAmount / nextPrice, symbolInfo['quantityPrecision'])
+        orders.append({"price": round(nextPrice, symbolInfo['pricePrecision']), "origQty": quantity})
+
+        profit = Client.GetTotalAmount(orders, True) * Config.PROFIT
+        orders[-1]['profit'] = round(profit, 4)
+
+        if Config.LOGARITHMIC:
+            nextPrice += price_change * (-1 if Config.SIDE == 'BUY' else 1)
+            price_change *= Config.LOGARITHMIC_VALUE
+        else:
+            nextPrice += overlap / (Config.ORDERS_GRID - 1) * (-1 if Config.SIDE == 'BUY' else 1)
+
+        nextAmount += nextAmount * Config.MARTINGALE
+
+    orders.append({"totalAmount": Client.GetTotalAmount(orders, True)})
+
+    import json
+    print(json.dumps(orders, indent=2))
 
 if __name__ == "__main__":
     main()
