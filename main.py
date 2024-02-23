@@ -23,8 +23,8 @@ def main():
     if 'code' in MarginTypeRes:
         if MarginTypeRes['code'] != -4046:
             raise ValueError('Set margin type error')
-    # if float(client.Balance()['balance']) < Config.DEPOSIT:
-    #     raise ValueError('Insufficient balance')
+    if float(client.Balance()['balance']) < Config.DEPOSIT:
+        raise ValueError('Insufficient balance')
 
     symbolInfo = Client.GetSymbolInfo(Config.TRADING_PAIR)
 
@@ -136,6 +136,7 @@ def TakeProfitAll(orders: List[Any], price: float):
 
 def NotFilled(order):
     info = client.Order(OrderParams(Config.TRADING_PAIR, orderId=order['orderId']), 'info')
+    if not 'status' in info: print(info)
     return info['status'] != 'FILLED'
 
 def showOrdersGrid(overlap: float, nextPrice: float, nextAmount: float, price_change: float, symbolInfo: Any):

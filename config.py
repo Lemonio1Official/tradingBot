@@ -1,5 +1,5 @@
 class Config:
-    SIDE = 'SELL' # BUY/SELL
+    SIDE = 'BUY' # BUY/SELL
     TRADING_PAIR = 'ETHUSDT'
     DEPOSIT = 100 # int
     LEVERAGE = 10 # int 0 - 100
