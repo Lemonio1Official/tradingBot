@@ -124,6 +124,7 @@ def main():
 def CancelOrders(orders: List[Any]):
     for i in orders:
         client.Order(OrderParams(Config.TRADING_PAIR, orderId=i['orderId']), 'cancel')
+        sleep(0.5)
 
 def TakeProfitAll(orders: List[Any], price: float):
     side = 'SELL' if Config.SIDE == 'BUY' else 'BUY'
@@ -131,12 +132,13 @@ def TakeProfitAll(orders: List[Any], price: float):
     for i in orders:
         order = client.Order(OrderParams(Config.TRADING_PAIR, side, 'TAKE_PROFIT', i['origQty'], price, price, orderId=i['orderId']))
         TP_orders.append(order)
+        sleep(0.5)
 
     return TP_orders
 
 def NotFilled(order):
     info = client.Order(OrderParams(Config.TRADING_PAIR, orderId=order['orderId']), 'info')
-    if not 'status' in info: print(info)
+    sleep(0.5)
     return info['status'] != 'FILLED'
 
 def showOrdersGrid(overlap: float, nextPrice: float, nextAmount: float, price_change: float, symbolInfo: Any):
@@ -163,4 +165,7 @@ def showOrdersGrid(overlap: float, nextPrice: float, nextAmount: float, price_ch
     print(json.dumps(orders, indent=2))
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
